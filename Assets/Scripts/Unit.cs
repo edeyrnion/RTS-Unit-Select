@@ -10,6 +10,8 @@ public class Unit : MonoBehaviour
 
     private Renderer _renderer;
 
+    [SerializeField] private GUIStyle _unitBox;
+
     private void OnEnable()
     {
         AllUnits.Add(gameObject);
@@ -19,6 +21,14 @@ public class Unit : MonoBehaviour
     {
         Events.UpdateUnits.AddListener(UpdateUnitsHandler);
         _renderer = GetComponent<Renderer>();
+    }
+
+    private void OnGUI()
+    {
+        Rect rect = Helpers.GetScreenRect(_renderer);
+        rect.y = Screen.height - rect.y - rect.height;
+
+        GUI.Box(rect, "", _unitBox);
     }
 
     private void UpdateUnitsHandler(List<GameObject> units)
