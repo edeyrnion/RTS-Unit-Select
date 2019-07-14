@@ -28,15 +28,9 @@ public class MouseManager : MonoBehaviour
     {
         if (_isDragging)
         {
-            Vector3 mouseDownPosition = _camera.WorldToScreenPoint(_mouseDownPosition);
-            float boxWidth = mouseDownPosition.x - Input.mousePosition.x;
-            float boxHight = mouseDownPosition.y - Input.mousePosition.y;
-            float boxLeft = Input.mousePosition.x;
-            float boxTop = Screen.height - Input.mousePosition.y - boxHight;
+            _selectionBox = Helpers.GetScreenRect(_camera.WorldToScreenPoint(_mouseDownPosition), Input.mousePosition);
 
-            _selectionBox = new Rect(boxLeft, boxTop, boxWidth, boxHight);
-
-            if ((Mathf.Abs(boxWidth) >= _dragThreshold || Mathf.Abs(boxHight) >= _dragThreshold) && !_reachedDragThreshold)
+            if ((Mathf.Abs(_selectionBox.width) >= _dragThreshold || Mathf.Abs(_selectionBox.height) >= _dragThreshold) && !_reachedDragThreshold)
             {
                 _reachedDragThreshold = true;
             }
@@ -85,7 +79,7 @@ public class MouseManager : MonoBehaviour
     {
         if (_isDragging && _reachedDragThreshold)
         {
-            GUI.Box(_selectionBox, "", _mouseDragSkin);
+            GUI.Box(Helpers.ScreenToGuiSpace(_selectionBox), "", _mouseDragSkin);
         }
     }
 
