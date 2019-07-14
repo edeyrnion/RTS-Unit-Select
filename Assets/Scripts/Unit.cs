@@ -7,12 +7,11 @@ public class Unit : MonoBehaviour
     [SerializeField] private Material _selected;
     [SerializeField] private GUIStyle _unitBox;
 
-    public readonly static List<GameObject> AllUnits = new List<GameObject>(); // Old.
     public static IReadOnlyList<Unit> Units => _units;
-    private readonly static List<Unit> _units = new List<Unit>();
+    private static readonly List<Unit> _units = new List<Unit>();
 
     public static IReadOnlyList<Unit> UnitsOnScreen => _unitsOnScreen;
-    private readonly static List<Unit> _unitsOnScreen = new List<Unit>();
+    private static readonly List<Unit> _unitsOnScreen = new List<Unit>();
 
     public Renderer Renderer { get; private set; }
     public Collider Collider { get; private set; }
@@ -27,18 +26,12 @@ public class Unit : MonoBehaviour
 
     private void OnEnable()
     {
-        AllUnits.Add(gameObject); // Old.
         _units.Add(this);
     }
 
     private void OnBecameVisible()
     {
         _unitsOnScreen.Add(this);
-    }
-
-    private void Start()
-    {
-        Events.UpdateUnits.AddListener(UpdateUnitsHandler);
     }
 
     private void Update()
@@ -54,18 +47,6 @@ public class Unit : MonoBehaviour
         if (Renderer.isVisible && IsSelected)
         {
             GUI.Box(Helpers.ScreenToGuiSpace(Bounds2D), "", _unitBox);
-        }
-    }
-
-    private void UpdateUnitsHandler(List<GameObject> units)
-    {
-        if (units.Contains(gameObject))
-        {
-            Renderer.material = _selected;
-        }
-        else
-        {
-            Renderer.material = _normal;
         }
     }
 
@@ -86,7 +67,6 @@ public class Unit : MonoBehaviour
 
     private void OnDisable()
     {
-        AllUnits.Remove(gameObject); // Old.
         _units.Remove(this);
     }
 

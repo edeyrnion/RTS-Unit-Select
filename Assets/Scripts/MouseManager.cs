@@ -8,17 +8,14 @@ public class MouseManager : MonoBehaviour
     private Camera _camera;
     private readonly float _maxDistance = 50f;
 
-    private Rect _selectionBox;
-
-    private Vector3 _mouseDownPosition; // Worldspace
+    private Vector3 _mouseDownPosition; // Screenspace
+    private Rect _selectionBox; // Screenspace
     private readonly float _mouseClickThreshold = 1f; // In pixel.
-
     private readonly float _dragThreshold = 4f; // In pixel;
     private bool _reachedDragThreshold = false;
-
-    private List<GameObject> _unitsInDragBox = new List<GameObject>();
-
     private bool _isDragging = false;
+
+    private List<Unit> _unitsInDragBox = new List<Unit>();
 
     private void Start()
     {
@@ -29,7 +26,7 @@ public class MouseManager : MonoBehaviour
     {
         if (_isDragging)
         {
-            _selectionBox = Helpers.GetScreenRect(_camera.WorldToScreenPoint(_mouseDownPosition), Input.mousePosition);
+            _selectionBox = Helpers.GetScreenRect(_mouseDownPosition, Input.mousePosition);
 
             if ((Mathf.Abs(_selectionBox.width) >= _dragThreshold || Mathf.Abs(_selectionBox.height) >= _dragThreshold) && !_reachedDragThreshold)
             {
@@ -46,7 +43,7 @@ public class MouseManager : MonoBehaviour
 
             if (Input.GetMouseButtonDown(0))
             {
-                _mouseDownPosition = _camera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, _camera.nearClipPlane));
+                _mouseDownPosition = Input.mousePosition;
                 _isDragging = true;
             }
 
@@ -59,7 +56,8 @@ public class MouseManager : MonoBehaviour
                 {
                     if (target.tag == "Unit")
                     {
-                        Events.UnitSelect.Invoke(target, UseModifierKey());
+                        Unit unit = target.GetComponent<Unit>();
+                        Events.UnitSelect.Invoke(unit, UseModifierKey());
                     }
                     else if (!UseModifierKey())
                     {
@@ -68,9 +66,9 @@ public class MouseManager : MonoBehaviour
                 }
                 else
                 {
-                    GameObject[] targets = DragSelect(_selectionBox);
+                    Unit[] units = DragSelect(_selectionBox);
 
-                    Events.UnitDragSelect.Invoke(targets, UseModifierKey());
+                    Events.UnitDragSelect.Invoke(units, UseModifierKey());
                 }
             }
         }
@@ -86,30 +84,21 @@ public class MouseManager : MonoBehaviour
 
     private bool IsLeftMouseClick()
     {
-        if (Vector3.Distance(_camera.WorldToScreenPoint(_mouseDownPosition), Input.mousePosition) < _dragThreshold)
-        {
-            return true;
-        }
-
-        return false;
+        return (Vector3.Distance(_mouseDownPosition, Input.mousePosition) < _dragThreshold);
     }
 
-    private GameObject[] DragSelect(Rect box)
+    private Unit[] DragSelect(Rect box)
     {
         _unitsInDragBox.Clear();
 
-        Vector2 temp = (_camera.WorldToScreenPoint(_mouseDownPosition) + Input.mousePosition) * 0.5f;
-
-        foreach (var unit in Unit.AllUnits)
+        foreach (var unit in Unit.UnitsOnScreen)
         {
-            Vector2 pos = _camera.WorldToScreenPoint(unit.transform.position);
-
-            if (Mathf.Abs(pos.x - temp.x) < (Mathf.Abs(box.width) * 0.5f) && Mathf.Abs(pos.y - temp.y) < (Mathf.Abs(box.height) * 0.5f))
+            if (Helpers.Overlaps(unit.Bounds2D, box, 20f))
             {
                 _unitsInDragBox.Add(unit);
             }
         }
-        GameObject[] targets = _unitsInDragBox.ToArray();
+        Unit[] targets = _unitsInDragBox.ToArray();
         return targets;
     }
 

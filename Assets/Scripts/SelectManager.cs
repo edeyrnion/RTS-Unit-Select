@@ -3,7 +3,8 @@ using UnityEngine;
 
 public class SelectManager : MonoBehaviour
 {
-    public readonly List<GameObject> SelectedUnits = new List<GameObject>();
+    public static IReadOnlyList<Unit> UnitsSelected => _unitsSelected;
+    private static readonly List<Unit> _unitsSelected = new List<Unit>();
 
     private void Start()
     {
@@ -14,50 +15,64 @@ public class SelectManager : MonoBehaviour
 
     private void UnitDeselectHandler()
     {
-        SelectedUnits.Clear();
-        Events.UpdateUnits.Invoke(SelectedUnits);
-
-        Debug.Log("UnitDeselectHandler");
+        foreach (Unit unit in _unitsSelected)
+        {
+            unit.DeselectUnit();
+        }
+        _unitsSelected.Clear();
     }
 
-    private void UnitDragSelectHandler(GameObject[] units, bool useModifier)
+    private void UnitDragSelectHandler(Unit[] units, bool useModifier)
     {
         if (useModifier)
         {
-            SelectedUnits.AddRange(units);
+            foreach (Unit u in units)
+            {
+                u.SelectUnit();
+            }
+            _unitsSelected.AddRange(units);
         }
         else
         {
-            SelectedUnits.Clear();
-            SelectedUnits.AddRange(units);
+            foreach (Unit u in _unitsSelected)
+            {
+                u.DeselectUnit();
+            }
+            _unitsSelected.Clear();
+
+            foreach (Unit u in units)
+            {
+                u.SelectUnit();
+            }
+            _unitsSelected.AddRange(units);
         }
-
-        Events.UpdateUnits.Invoke(SelectedUnits);
-
-        Debug.Log("UnitDragSelectHandler");
     }
 
-    private void UnitSelectHandler(GameObject unit, bool useModifier)
+    private void UnitSelectHandler(Unit unit, bool useModifier)
     {
         if (useModifier)
         {
-            if (SelectedUnits.Contains(unit))
+            if (_unitsSelected.Contains(unit))
             {
-                SelectedUnits.Remove(unit);
+                unit.DeselectUnit();
+                _unitsSelected.Remove(unit);
             }
             else
             {
-                SelectedUnits.Add(unit);
+                unit.SelectUnit();
+                _unitsSelected.Add(unit);
             }
         }
         else
         {
-            SelectedUnits.Clear();
-            SelectedUnits.Add(unit);
+            foreach (Unit u in _unitsSelected)
+            {
+                u.DeselectUnit();
+            }
+            _unitsSelected.Clear();
+
+            unit.SelectUnit();
+            _unitsSelected.Add(unit);
         }
-
-        Events.UpdateUnits.Invoke(SelectedUnits);
-
-        Debug.Log("UnitSelectHandler");
     }
 }
