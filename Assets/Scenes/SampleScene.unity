@@ -230,21 +230,6 @@ MonoBehaviour:
     m_FixedHeight: 0
     m_StretchWidth: 1
     m_StretchHeight: 1
-  _unitSelect:
-    m_PersistentCalls:
-      m_Calls: []
-    m_TypeName: Events+EventUnitSelect, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
-  _dragSelect:
-    m_PersistentCalls:
-      m_Calls: []
-    m_TypeName: Events+EventUnitDragSelect, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
-  _unitDeselect:
-    m_PersistentCalls:
-      m_Calls: []
-    m_TypeName: Events+EventUnitDeselect, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
 --- !u!1001 &321238819
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -550,8 +535,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: -0.20711416, y: 0.673138, z: -0.2051452, w: -0.6796354}
-  m_LocalPosition: {x: 22.071985, y: 12.886304, z: 0.01002875}
+  m_LocalRotation: {x: -0.36691767, y: 0.6049036, z: -0.36781913, w: -0.6034668}
+  m_LocalPosition: {x: 9.926077, y: 13.860993, z: 0.57330453}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

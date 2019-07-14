@@ -1,23 +1,23 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class MouseManager : MonoBehaviour
 {
     private Camera _camera;
     private readonly float _maxDistance = 50f;
-    //RaycastHit hitInfo;
 
     [SerializeField] private GUIStyle _mouseDragSkin;
+    private Rect _selectionBox;
 
-    private Vector3 _mouseDownPosition;
-    private Vector3 _mouseUpPosition;
-    //private Vector3 _mouseCurrentPosition;
-    private readonly float _clickThreshold = 2f;
+    private Vector3 _mouseDownPosition; // Worldspace
+    private readonly float _mouseClickThreshold = 1f;
 
-    private bool _isDragging;
+    private readonly float _dragThreshold = 4f;
+    private bool _reachedDragThreshold = false;
 
-    public Events.EventUnitSelect _unitSelect;
-    public Events.EventUnitDragSelect _dragSelect;
-    public Events.EventUnitDeselect _unitDeselect;
+    List<GameObject> _unitsInDragBox = new List<GameObject>();
+
+    private bool _isDragging = false;
 
     private void Start()
     {
@@ -26,6 +26,22 @@ public class MouseManager : MonoBehaviour
 
     private void Update()
     {
+        if (_isDragging)
+        {
+            Vector3 mouseDownPosition = _camera.WorldToScreenPoint(_mouseDownPosition);
+            float boxWidth = mouseDownPosition.x - Input.mousePosition.x;
+            float boxHight = mouseDownPosition.y - Input.mousePosition.y;
+            float boxLeft = Input.mousePosition.x;
+            float boxTop = Screen.height - Input.mousePosition.y - boxHight;
+
+            _selectionBox = new Rect(boxLeft, boxTop, boxWidth, boxHight);
+
+            if ((Mathf.Abs(boxWidth) >= _dragThreshold || Mathf.Abs(boxHight) >= _dragThreshold) && !_reachedDragThreshold)
+            {
+                _reachedDragThreshold = true;
+            }
+        }
+
         Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
         LayerMask layerMask = (int)Layer.Unit | (int)Layer.Terrain;
 
@@ -42,26 +58,24 @@ public class MouseManager : MonoBehaviour
             if (Input.GetMouseButtonUp(0))
             {
                 _isDragging = false;
+                _reachedDragThreshold = false;
 
                 if (IsLeftMouseClick())
                 {
-                    if (target.layer == (int)Layer.Unit)
+                    if (target.tag == "Unit")
                     {
-                        _unitSelect.Invoke(target, UseModifierKey());
+                        Events.UnitSelect.Invoke(target, UseModifierKey());
                     }
                     else if (!UseModifierKey())
                     {
-                        _unitDeselect.Invoke();
+                        Events.UnitDeselect.Invoke();
                     }
-
                 }
                 else
                 {
-                    Vector3 topLeftCorner = _mouseDownPosition;
-                    Vector3 bottomRightCorner = _camera.ScreenToWorldPoint(Input.mousePosition);
-                    GameObject[] targets = DragSelect(topLeftCorner, bottomRightCorner, (int)Layer.Unit);
+                    GameObject[] targets = DragSelect(_selectionBox);
 
-                    _dragSelect.Invoke(targets, UseModifierKey());
+                    Events.UnitDragSelect.Invoke(targets, UseModifierKey());
                 }
             }
         }
@@ -69,22 +83,15 @@ public class MouseManager : MonoBehaviour
 
     private void OnGUI()
     {
-        if (_isDragging && !IsLeftMouseClick())
+        if (_isDragging && _reachedDragThreshold)
         {
-            Vector3 mouseDownPosition = _camera.WorldToScreenPoint(_mouseDownPosition);
-            float boxWidth = mouseDownPosition.x - Input.mousePosition.x;
-            float boxHight = mouseDownPosition.y - Input.mousePosition.y;
-
-            float boxLeft = Input.mousePosition.x;
-            float boxTop = Screen.height - Input.mousePosition.y - boxHight;
-
-            GUI.Box(new Rect(boxLeft, boxTop, boxWidth, boxHight), "", _mouseDragSkin);
+            GUI.Box(_selectionBox, "", _mouseDragSkin);
         }
     }
 
     private bool IsLeftMouseClick()
     {
-        if (Vector3.Distance(_camera.WorldToScreenPoint(_mouseDownPosition), Input.mousePosition) < _clickThreshold)
+        if (Vector3.Distance(_camera.WorldToScreenPoint(_mouseDownPosition), Input.mousePosition) < _dragThreshold)
         {
             return true;
         }
@@ -92,9 +99,22 @@ public class MouseManager : MonoBehaviour
         return false;
     }
 
-    private GameObject[] DragSelect(Vector3 topLeftCorner, Vector3 bottomRightCorner, int layerMask)
+    private GameObject[] DragSelect(Rect box)
     {
-        GameObject[] targets = new GameObject[0];
+        _unitsInDragBox.Clear();
+
+        Vector2 temp = (_camera.WorldToScreenPoint(_mouseDownPosition) + Input.mousePosition) * 0.5f;
+
+        foreach (var unit in Unit.AllUnits)
+        {
+            Vector2 pos = _camera.WorldToScreenPoint(unit.transform.position);
+
+            if (Mathf.Abs(pos.x - temp.x) < (Mathf.Abs(box.width) * 0.5f) && Mathf.Abs(pos.y - temp.y) < (Mathf.Abs(box.height) * 0.5f))
+            {
+                _unitsInDragBox.Add(unit);
+            }
+        }
+        GameObject[] targets = _unitsInDragBox.ToArray();
         return targets;
     }
 

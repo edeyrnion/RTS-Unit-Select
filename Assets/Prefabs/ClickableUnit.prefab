@@ -12,9 +12,10 @@ GameObject:
   - component: {fileID: 2985106393693130248}
   - component: {fileID: 2985106393693130249}
   - component: {fileID: 2985106393693130254}
+  - component: {fileID: 7759854447549941883}
   m_Layer: 10
   m_Name: ClickableUnit
-  m_TagString: Untagged
+  m_TagString: Unit
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -92,3 +93,17 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7759854447549941883
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2985106393693130252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8eb23e1e9e847284ea3d9e3749246582, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Normal: {fileID: 2100000, guid: 4b2cd1ca7e5180a42b674693cf945f24, type: 2}
+  Selected: {fileID: 2100000, guid: 8c4698d442365de4da73c18a5f82928f, type: 2}
