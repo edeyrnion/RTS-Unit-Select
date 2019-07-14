@@ -10,7 +10,7 @@ public class MouseManager : MonoBehaviour
 
     private Vector3 _mouseDownPosition; // Screenspace
     private Rect _selectionBox; // Screenspace
-    private readonly float _mouseClickThreshold = 1f; // In pixel.
+    private readonly float _mouseClickThreshold = 2f; // In pixel.
     private readonly float _dragThreshold = 4f; // In pixel;
     private bool _reachedDragThreshold = false;
     private bool _isDragging = false;
