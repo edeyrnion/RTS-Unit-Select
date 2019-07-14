@@ -15,7 +15,7 @@ public class Unit : MonoBehaviour
 
     public Renderer Renderer { get; private set; }
     public Collider Collider { get; private set; }
-    public Rect Bounds2D { get; private set; }
+    public Rect Bounds2D { get => UpdateBounds(); }
     public bool IsSelected { get; private set; }
 
     private void Awake()
@@ -34,20 +34,9 @@ public class Unit : MonoBehaviour
         _unitsOnScreen.Add(this);
     }
 
-    private void Update()
+    private Rect UpdateBounds()
     {
-        if (Renderer.isVisible)
-        {
-            Bounds2D = Helpers.GetScreenRect(Renderer);
-        }
-    }
-
-    private void OnGUI()
-    {
-        if (Renderer.isVisible && IsSelected)
-        {
-            GUI.Box(Helpers.ScreenToGuiSpace(Bounds2D), "", _unitBox);
-        }
+        return Helpers.GetScreenRect(Renderer);
     }
 
     public void SelectUnit()
@@ -58,6 +47,14 @@ public class Unit : MonoBehaviour
     public void DeselectUnit()
     {
         IsSelected = false;
+    }
+
+    private void OnGUI()
+    {
+        if (Renderer.isVisible && IsSelected)
+        {
+            GUI.Box(Helpers.ScreenToGuiSpace(Bounds2D), "", _unitBox);
+        }
     }
 
     private void OnBecameInvisible()

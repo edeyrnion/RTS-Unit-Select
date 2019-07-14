@@ -84,7 +84,7 @@ public class MouseManager : MonoBehaviour
 
     private bool IsLeftMouseClick()
     {
-        return (Vector3.Distance(_mouseDownPosition, Input.mousePosition) < _dragThreshold);
+        return (Vector3.Distance(_mouseDownPosition, Input.mousePosition) < _mouseClickThreshold);
     }
 
     private Unit[] DragSelect(Rect box)
@@ -93,7 +93,7 @@ public class MouseManager : MonoBehaviour
 
         foreach (var unit in Unit.UnitsOnScreen)
         {
-            if (Helpers.Overlaps(unit.Bounds2D, box, 20f))
+            if (box.Overlaps(unit.Bounds2D))
             {
                 _unitsInDragBox.Add(unit);
             }

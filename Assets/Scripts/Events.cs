@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
-using UnityEngine.Events;
+﻿using UnityEngine.Events;
 
 public class EventUnitDragSelect : UnityEvent<Unit[], bool> { }
 public class EventUnitSelect : UnityEvent<Unit, bool> { }
