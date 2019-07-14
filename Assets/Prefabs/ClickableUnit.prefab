@@ -105,8 +105,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8eb23e1e9e847284ea3d9e3749246582, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Normal: {fileID: 2100000, guid: 4b2cd1ca7e5180a42b674693cf945f24, type: 2}
-  Selected: {fileID: 2100000, guid: 8c4698d442365de4da73c18a5f82928f, type: 2}
+  _normal: {fileID: 2100000, guid: 4b2cd1ca7e5180a42b674693cf945f24, type: 2}
+  _selected: {fileID: 2100000, guid: 8c4698d442365de4da73c18a5f82928f, type: 2}
   _unitBox:
     m_Name: 
     m_Normal:

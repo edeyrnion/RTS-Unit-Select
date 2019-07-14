@@ -75,6 +75,11 @@ public static class Helpers
         return new Rect(boxX, boxY, boxWidth, boxHight);
     }
 
+    public static bool Overlaps(Rect rect1, Rect rect2, float percentage)
+    {
+        return rect1.Overlaps(rect2);
+    }
+
     public static Rect ScreenToGuiSpace(Rect rect)
     {
         rect.y = Screen.height - rect.y - rect.height;

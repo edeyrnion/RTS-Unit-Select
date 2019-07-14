@@ -3,19 +3,20 @@ using UnityEngine;
 
 public class MouseManager : MonoBehaviour
 {
+    [SerializeField] private GUIStyle _mouseDragSkin;
+
     private Camera _camera;
     private readonly float _maxDistance = 50f;
 
-    [SerializeField] private GUIStyle _mouseDragSkin;
     private Rect _selectionBox;
 
     private Vector3 _mouseDownPosition; // Worldspace
-    private readonly float _mouseClickThreshold = 1f;
+    private readonly float _mouseClickThreshold = 1f; // In pixel.
 
-    private readonly float _dragThreshold = 4f;
+    private readonly float _dragThreshold = 4f; // In pixel;
     private bool _reachedDragThreshold = false;
 
-    List<GameObject> _unitsInDragBox = new List<GameObject>();
+    private List<GameObject> _unitsInDragBox = new List<GameObject>();
 
     private bool _isDragging = false;
 
