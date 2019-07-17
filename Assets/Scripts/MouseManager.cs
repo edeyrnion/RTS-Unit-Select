@@ -1,21 +1,21 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class MouseManager : MonoBehaviour
 {
-    [SerializeField] private GUIStyle _mouseDragSkin;
+    [SerializeField] private Image _selectionBoxImage;
+    [SerializeField] private LayerMask _unitLayer;
+
+    private readonly float _maxDistance = 50f; // In unity units.
+    private readonly float _dragThreshold = 4f; // In pixel.
+
+    private Vector2 _startPosition;
+    private Rect _selectionRect;
+
+    private bool _reachedDragThreshold = false;
+    private bool _isMouseDown = false;
 
     private Camera _camera;
-    private readonly float _maxDistance = 50f;
-
-    private Vector3 _mouseDownPosition; // Screenspace
-    private Rect _selectionBox; // Screenspace
-    private readonly float _mouseClickThreshold = 2f; // In pixel.
-    private readonly float _dragThreshold = 4f; // In pixel;
-    private bool _reachedDragThreshold = false;
-    private bool _isDragging = false;
-
-    private List<Unit> _unitsInDragBox = new List<Unit>();
 
     private void Start()
     {
@@ -24,82 +24,117 @@ public class MouseManager : MonoBehaviour
 
     private void Update()
     {
-        if (_isDragging)
-        {
-            _selectionBox = Helpers.GetScreenRect(_mouseDownPosition, Input.mousePosition);
+        Vector2 currentMousePosition = Input.mousePosition;
 
-            if ((Mathf.Abs(_selectionBox.width) >= _dragThreshold || Mathf.Abs(_selectionBox.height) >= _dragThreshold) && !_reachedDragThreshold)
+        if (_isMouseDown && !_reachedDragThreshold)
+        {
+            _reachedDragThreshold = Mathf.Abs(_startPosition.x - currentMousePosition.x) >= _dragThreshold || Mathf.Abs(_startPosition.y - currentMousePosition.y) >= _dragThreshold;
+
+            if (_reachedDragThreshold)
             {
-                _reachedDragThreshold = true;
+                BeginDrag();
             }
         }
 
-        Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
-        LayerMask layerMask = (int)Layer.Unit | (int)Layer.Terrain;
-
-        if (Physics.Raycast(ray, out RaycastHit hitInfo, _maxDistance, layerMask))
+        if (_isMouseDown && _reachedDragThreshold)
         {
-            GameObject target = hitInfo.collider.gameObject;
+            Drag(currentMousePosition);
+        }
 
-            if (Input.GetMouseButtonDown(0))
-            {
-                _mouseDownPosition = Input.mousePosition;
-                _isDragging = true;
-            }
+        if (Input.GetMouseButtonDown(0))
+        {
+            _startPosition = currentMousePosition;
+            _isMouseDown = true;
+        }
 
-            if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(0))
+        {
+            if (_reachedDragThreshold)
             {
-                _isDragging = false;
+                EndDrag();
                 _reachedDragThreshold = false;
-
-                if (IsLeftMouseClick())
+            }
+            else
+            {
+                Ray ray = _camera.ScreenPointToRay(currentMousePosition);
+                if (Physics.Raycast(ray, out RaycastHit hitInfo, _maxDistance, _unitLayer))
                 {
-                    if (target.tag == "Unit")
-                    {
-                        Unit unit = target.GetComponent<Unit>();
-                        Events.UnitSelect.Invoke(unit, UseModifierKey());
-                    }
-                    else if (!UseModifierKey())
-                    {
-                        Events.UnitDeselect.Invoke();
-                    }
+                    Unit unit = hitInfo.transform.gameObject.GetComponent<Unit>();
+                    Click(unit);
                 }
                 else
                 {
-                    Unit[] units = DragSelect(_selectionBox);
-
-                    Events.UnitDragSelect.Invoke(units, UseModifierKey());
+                    Unit.DeselectAllUnits();
                 }
             }
+            _isMouseDown = false;
         }
     }
 
-    private void OnGUI()
+    private void Click(Unit unit)
     {
-        if (_isDragging && _reachedDragThreshold)
+        if (!UseModifierKey())
         {
-            GUI.Box(Helpers.ScreenToGuiSpace(_selectionBox), "", _mouseDragSkin);
+            Unit.DeselectAllUnits();
         }
+        unit.ClickUnit();
     }
 
-    private bool IsLeftMouseClick()
+    private void BeginDrag()
     {
-        return (Vector3.Distance(_mouseDownPosition, Input.mousePosition) < _mouseClickThreshold);
+        _selectionBoxImage.gameObject.SetActive(true);
+        _selectionRect = new Rect();
     }
 
-    private Unit[] DragSelect(Rect box)
+    private void Drag(Vector2 currentMousePosition)
     {
-        _unitsInDragBox.Clear();
+        if (currentMousePosition.x < _startPosition.x)
+        {
+            _selectionRect.xMin = currentMousePosition.x;
+            _selectionRect.xMax = _startPosition.x;
+        }
+        else
+        {
+            _selectionRect.xMin = _startPosition.x;
+            _selectionRect.xMax = currentMousePosition.x;
+        }
+
+        if (currentMousePosition.y < _startPosition.y)
+        {
+            _selectionRect.yMin = currentMousePosition.y;
+            _selectionRect.yMax = _startPosition.y;
+        }
+        else
+        {
+            _selectionRect.yMin = _startPosition.y;
+            _selectionRect.yMax = currentMousePosition.y;
+        }
+
+        _selectionBoxImage.rectTransform.offsetMin = _selectionRect.min;
+        _selectionBoxImage.rectTransform.offsetMax = _selectionRect.max;
+    }
+
+    private void EndDrag()
+    {
+        _selectionBoxImage.gameObject.SetActive(false);
+
+        if (!UseModifierKey())
+        {
+            Unit.DeselectAllUnits();
+        }
 
         foreach (var unit in Unit.UnitsOnScreen)
         {
-            if (box.Overlaps(unit.Bounds2D))
+            if (_selectionRect.Overlaps(unit.Bounds2D))
             {
-                _unitsInDragBox.Add(unit);
+                unit.SelectUnit();
             }
+
+            //if (_selectionBox.Contains(Camera.main.WorldToScreenPoint(unit.transform.position)))
+            //{
+            //    unit.SelectUnit();
+            //}
         }
-        Unit[] targets = _unitsInDragBox.ToArray();
-        return targets;
     }
 
     private bool UseModifierKey()

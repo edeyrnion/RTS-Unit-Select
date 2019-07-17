@@ -54,16 +54,6 @@ public static class Helpers
         return new Rect(min.x, min.y, max.x - min.x, max.y - min.y);
     }
 
-    public static Rect GetScreenRect(Renderer renderer)
-    {
-        return GetScreenRect(renderer.bounds);
-    }
-
-    public static Rect GetScreenRect(Collider collider)
-    {
-        return GetScreenRect(collider.bounds);
-    }
-
     public static Rect GetScreenRect(Vector2 point1, Vector2 point2)
     {
         Vector2 boxCenter = (point1 + point2) * 0.5f;
@@ -73,17 +63,5 @@ public static class Helpers
         float boxY = boxCenter.y - (boxHight * 0.5f);
 
         return new Rect(boxX, boxY, boxWidth, boxHight);
-    }
-
-    public static Rect ScreenToGuiSpace(Rect rect)
-    {
-        rect.y = Screen.height - rect.y - rect.height;
-        return rect;
-    }
-
-    public static Vector2 ScreenToGuiSpace(Vector2 point)
-    {
-        point.y = Screen.height - point.y;
-        return point;
     }
 }

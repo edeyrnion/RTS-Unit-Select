@@ -3,25 +3,27 @@ using UnityEngine;
 
 public class Unit : MonoBehaviour
 {
-    [SerializeField] private Material _normal;
+    [SerializeField] private Material _unselected;
     [SerializeField] private Material _selected;
-    [SerializeField] private GUIStyle _unitBox;
 
-    public static IReadOnlyList<Unit> Units => _units;
-    private static readonly List<Unit> _units = new List<Unit>();
+    public static IReadOnlyCollection<Unit> Units => _units;
+    private static readonly HashSet<Unit> _units = new HashSet<Unit>();
 
-    public static IReadOnlyList<Unit> UnitsOnScreen => _unitsOnScreen;
-    private static readonly List<Unit> _unitsOnScreen = new List<Unit>();
+    public static IReadOnlyCollection<Unit> UnitsOnScreen => _unitsOnScreen;
+    private static readonly HashSet<Unit> _unitsOnScreen = new HashSet<Unit>();
 
-    public Renderer Renderer { get; private set; }
-    public Collider Collider { get; private set; }
+    public static IReadOnlyCollection<Unit> UnitsSelected => _unitsSelected;
+    private static readonly HashSet<Unit> _unitsSelected = new HashSet<Unit>();
+
     public Rect Bounds2D { get => UpdateBounds(); }
     public bool IsSelected { get; private set; }
+    public bool IsVisible { get; private set; }
+
+    private Renderer _renderer;
 
     private void Awake()
     {
-        Renderer = GetComponent<Renderer>();
-        Collider = GetComponent<Collider>();
+        _renderer = GetComponent<Renderer>();
     }
 
     private void OnEnable()
@@ -29,53 +31,78 @@ public class Unit : MonoBehaviour
         _units.Add(this);
     }
 
-    private void OnBecameVisible()
-    {
-        _unitsOnScreen.Add(this);
-    }
-
     private Rect UpdateBounds()
     {
-        return Helpers.GetScreenRect(Renderer);
+        return Helpers.GetScreenRect(_renderer.bounds);
+    }
+
+    public void ClickUnit()
+    {
+        if (_unitsSelected.Contains(this))
+        {
+            DeselectUnit();
+            return;
+        }
+        SelectUnit();
     }
 
     public void SelectUnit()
     {
         IsSelected = true;
+        _unitsSelected.Add(this);
+        _renderer.material = _selected; // Test code.
     }
 
     public void DeselectUnit()
     {
-        IsSelected = false;
+        _unitsSelected.Remove(this);
+        DeselectUnit_2();
     }
 
-    private void OnGUI()
+    private void DeselectUnit_2()
     {
-        if (Renderer.isVisible && IsSelected)
+        IsSelected = false;
+        _renderer.material = _unselected; // Test code.
+    }
+
+    public static void DeselectAllUnits()
+    {
+        foreach (var unit in _unitsSelected)
         {
-            GUI.Box(Helpers.ScreenToGuiSpace(Bounds2D), "", _unitBox);
+            unit.DeselectUnit_2();
         }
+        _unitsSelected.Clear();
+    }
+
+    private void OnBecameVisible()
+    {
+        IsVisible = true;
+        _unitsOnScreen.Add(this);
     }
 
     private void OnBecameInvisible()
     {
+        IsVisible = false;
         _unitsOnScreen.Remove(this);
     }
 
     private void OnDisable()
     {
         _units.Remove(this);
+
+        if (IsSelected)
+            DeselectUnit();
     }
 
     private void OnDestroy()
     {
         if (_units.Contains(this))
-        {
             _units.Remove(this);
-        }
+
         if (_unitsOnScreen.Contains(this))
-        {
             _unitsOnScreen.Remove(this);
-        }
+
+        if (_unitsSelected.Contains(this))
+            _unitsSelected.Remove(this);
     }
 }
