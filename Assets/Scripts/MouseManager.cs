@@ -10,8 +10,8 @@ public class MouseManager : MonoBehaviour
     [Tooltip("Layer of the clickable objects.")]
     [SerializeField] private LayerMask _unitLayer = ~0;
 
-    private readonly float _maxDistance = 50f; // In unity units.
-    private readonly float _dragThreshold = 4f; // In pixel.
+    private readonly float _maxDistance = 50f; // Max raycast distance in unity units.
+    private readonly float _dragThreshold = 4f; // Min mouse movement in pixel before going into drag select.
 
     private Vector2 _startPosition;
     private Rect _selectionRect;
@@ -20,20 +20,22 @@ public class MouseManager : MonoBehaviour
     private bool _isMouseDown = false;
     private bool _drawSelectionBox = false;
 
-    private Camera _camera;
     private Texture2D _selectionBoxBorder;
-    private Texture2D _selectionBoxFill;
+    private Texture2D _selectionBox;
+    private Camera _camera;
     private Unit _unit;
 
     private void Start()
     {
+        // Creating selectionbox border texture.
         _selectionBoxBorder = new Texture2D(1, 1);
         _selectionBoxBorder.SetPixel(0, 0, new Color(1f, 1f, 1f, 1f));
         _selectionBoxBorder.Apply();
 
-        _selectionBoxFill = new Texture2D(1, 1);
-        _selectionBoxFill.SetPixel(0, 0, new Color(1f, 1f, 1f, _selectionBoxAlpha));
-        _selectionBoxFill.Apply();
+        // Creating selectionbox texture.
+        _selectionBox = new Texture2D(1, 1);
+        _selectionBox.SetPixel(0, 0, new Color(1f, 1f, 1f, _selectionBoxAlpha));
+        _selectionBox.Apply();
 
         _camera = Camera.main;
     }
@@ -42,6 +44,7 @@ public class MouseManager : MonoBehaviour
     {
         Vector2 currentMousePosition = Input.mousePosition;
 
+        // Check if a mouse drag has started.
         if (_isMouseDown && !_reachedDragThreshold)
         {
             _reachedDragThreshold = Mathf.Abs(_startPosition.x - currentMousePosition.x) >= _dragThreshold || Mathf.Abs(_startPosition.y - currentMousePosition.y) >= _dragThreshold;
@@ -52,6 +55,7 @@ public class MouseManager : MonoBehaviour
             }
         }
 
+        // Check if a drag is in progress.
         if (_isMouseDown && _reachedDragThreshold)
         {
             Drag(currentMousePosition);
@@ -72,7 +76,8 @@ public class MouseManager : MonoBehaviour
             }
             else
             {
-                Ray ray = _camera.ScreenPointToRay(currentMousePosition);
+                // Only executed on a mouse click.
+                Ray ray = _camera.ScreenPointToRay(_startPosition);
                 if (Physics.Raycast(ray, out RaycastHit hitInfo, _maxDistance, _unitLayer))
                 {
                     _unit = hitInfo.transform.gameObject.GetComponent<Unit>();
@@ -83,9 +88,10 @@ public class MouseManager : MonoBehaviour
                 }
                 else
                 {
+                    // Deselect all if mouseclick has no target and modifier key is not used.
                     if (!UseModifierKey())
                     {
-                        Unit.DeselectAllUnits();
+                        Unit.DeselectAll();
                     }
                 }
             }
@@ -98,7 +104,7 @@ public class MouseManager : MonoBehaviour
     {
         if (_drawSelectionBox)
         {
-            GUI.DrawTexture(ScreenToGuiSpace(_selectionRect), _selectionBoxFill, ScaleMode.StretchToFill, true, 1f, _selecteionBoxColor, 0f, 0f);
+            GUI.DrawTexture(ScreenToGuiSpace(_selectionRect), _selectionBox, ScaleMode.StretchToFill, true, 1f, _selecteionBoxColor, 0f, 0f);
             GUI.DrawTexture(ScreenToGuiSpace(_selectionRect), _selectionBoxBorder, ScaleMode.StretchToFill, true, 1f, _selecteionBoxColor, 1f, 0f);
         }
     }
@@ -107,9 +113,9 @@ public class MouseManager : MonoBehaviour
     {
         if (!UseModifierKey())
         {
-            Unit.DeselectAllUnits();
+            Unit.DeselectAll();
         }
-        unit.ClickUnit();
+        unit.Click();
     }
 
     private void BeginDrag()
@@ -149,16 +155,19 @@ public class MouseManager : MonoBehaviour
 
         if (!UseModifierKey())
         {
-            Unit.DeselectAllUnits();
+            Unit.DeselectAll();
         }
 
         foreach (var unit in Unit.UnitsOnScreen)
         {
+            // Check if unit 2D bounds overlap with selection box.
             if (_selectionRect.Overlaps(unit.Bounds2D))
             {
-                unit.SelectUnit();
+                unit.Select();
             }
 
+            // Alternative selection method.
+            // Check if selection box contains unit position in screenspace.
             //if (_selectionBox.Contains(Camera.main.WorldToScreenPoint(unit.transform.position)))
             //{
             //    unit.SelectUnit();

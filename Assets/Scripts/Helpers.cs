@@ -2,6 +2,8 @@
 
 public static class Helpers
 {
+    /// <summary>Calculats 2D bounds in screenspace.
+    /// </summary>
     public static Rect GetScreenRect(Bounds bounds)
     {
         Vector3 cen = bounds.center;
