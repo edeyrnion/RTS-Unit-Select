@@ -3,9 +3,6 @@ using UnityEngine;
 
 public class Unit : MonoBehaviour
 {
-    [SerializeField] private Material _unselected;
-    [SerializeField] private Material _selected;
-
     public static IReadOnlyCollection<Unit> Units => _units;
     private static readonly HashSet<Unit> _units = new HashSet<Unit>();
 
@@ -50,7 +47,7 @@ public class Unit : MonoBehaviour
     {
         IsSelected = true;
         _unitsSelected.Add(this);
-        _renderer.material = _selected; // Test code.
+        _renderer.material.color = new Color(0f, 0.65f, 1f); // Test code.
     }
 
     public void DeselectUnit()
@@ -62,7 +59,7 @@ public class Unit : MonoBehaviour
     private void DeselectUnit_2()
     {
         IsSelected = false;
-        _renderer.material = _unselected; // Test code.
+        _renderer.material.color = new Color(0.9f, 0.9f, 0.9f); // Test code.
     }
 
     public static void DeselectAllUnits()
@@ -71,6 +68,7 @@ public class Unit : MonoBehaviour
         {
             unit.DeselectUnit_2();
         }
+
         _unitsSelected.Clear();
     }
 

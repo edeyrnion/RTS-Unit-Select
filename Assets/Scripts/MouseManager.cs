@@ -1,10 +1,14 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 
 public class MouseManager : MonoBehaviour
 {
-    [SerializeField] private Image _selectionBoxImage;
-    [SerializeField] private LayerMask _unitLayer;
+    [Header("Settings")]
+    [Tooltip("Base color of the mouse drag selection box.")]
+    [SerializeField] private Color _selecteionBoxColor = new Color(0.01f, 0.4f, 0.6f, 1f);
+    [Tooltip("Alpha of the inner mouse drag selection box."), Range(0f, 1f)]
+    [SerializeField] private float _selectionBoxAlpha = 0.2f;
+    [Tooltip("Layer of the clickable objects.")]
+    [SerializeField] private LayerMask _unitLayer = ~0;
 
     private readonly float _maxDistance = 50f; // In unity units.
     private readonly float _dragThreshold = 4f; // In pixel.
@@ -14,11 +18,23 @@ public class MouseManager : MonoBehaviour
 
     private bool _reachedDragThreshold = false;
     private bool _isMouseDown = false;
+    private bool _drawSelectionBox = false;
 
     private Camera _camera;
+    private Texture2D _selectionBoxBorder;
+    private Texture2D _selectionBoxFill;
+    private Unit _unit;
 
     private void Start()
     {
+        _selectionBoxBorder = new Texture2D(1, 1);
+        _selectionBoxBorder.SetPixel(0, 0, new Color(1f, 1f, 1f, 1f));
+        _selectionBoxBorder.Apply();
+
+        _selectionBoxFill = new Texture2D(1, 1);
+        _selectionBoxFill.SetPixel(0, 0, new Color(1f, 1f, 1f, _selectionBoxAlpha));
+        _selectionBoxFill.Apply();
+
         _camera = Camera.main;
     }
 
@@ -59,15 +75,31 @@ public class MouseManager : MonoBehaviour
                 Ray ray = _camera.ScreenPointToRay(currentMousePosition);
                 if (Physics.Raycast(ray, out RaycastHit hitInfo, _maxDistance, _unitLayer))
                 {
-                    Unit unit = hitInfo.transform.gameObject.GetComponent<Unit>();
-                    Click(unit);
+                    _unit = hitInfo.transform.gameObject.GetComponent<Unit>();
+                    if (_unit)
+                    {
+                        Click(_unit);
+                    }
                 }
                 else
                 {
-                    Unit.DeselectAllUnits();
+                    if (!UseModifierKey())
+                    {
+                        Unit.DeselectAllUnits();
+                    }
                 }
             }
+
             _isMouseDown = false;
+        }
+    }
+
+    private void OnGUI()
+    {
+        if (_drawSelectionBox)
+        {
+            GUI.DrawTexture(ScreenToGuiSpace(_selectionRect), _selectionBoxFill, ScaleMode.StretchToFill, true, 1f, _selecteionBoxColor, 0f, 0f);
+            GUI.DrawTexture(ScreenToGuiSpace(_selectionRect), _selectionBoxBorder, ScaleMode.StretchToFill, true, 1f, _selecteionBoxColor, 1f, 0f);
         }
     }
 
@@ -82,7 +114,7 @@ public class MouseManager : MonoBehaviour
 
     private void BeginDrag()
     {
-        _selectionBoxImage.gameObject.SetActive(true);
+        _drawSelectionBox = true;
         _selectionRect = new Rect();
     }
 
@@ -109,14 +141,11 @@ public class MouseManager : MonoBehaviour
             _selectionRect.yMin = _startPosition.y;
             _selectionRect.yMax = currentMousePosition.y;
         }
-
-        _selectionBoxImage.rectTransform.offsetMin = _selectionRect.min;
-        _selectionBoxImage.rectTransform.offsetMax = _selectionRect.max;
     }
 
     private void EndDrag()
     {
-        _selectionBoxImage.gameObject.SetActive(false);
+        _drawSelectionBox = false;
 
         if (!UseModifierKey())
         {
@@ -140,5 +169,11 @@ public class MouseManager : MonoBehaviour
     private bool UseModifierKey()
     {
         return Input.GetKey(KeyCode.LeftShift);
+    }
+
+    private Rect ScreenToGuiSpace(Rect rect)
+    {
+        rect.y = Screen.height - rect.y - rect.height;
+        return rect;
     }
 }

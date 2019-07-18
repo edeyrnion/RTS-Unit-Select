@@ -53,15 +53,4 @@ public static class Helpers
 
         return new Rect(min.x, min.y, max.x - min.x, max.y - min.y);
     }
-
-    public static Rect GetScreenRect(Vector2 point1, Vector2 point2)
-    {
-        Vector2 boxCenter = (point1 + point2) * 0.5f;
-        float boxWidth = Mathf.Abs(point1.x - point2.x);
-        float boxHight = Mathf.Abs(point1.y - point2.y);
-        float boxX = boxCenter.x - (boxWidth * 0.5f);
-        float boxY = boxCenter.y - (boxHight * 0.5f);
-
-        return new Rect(boxX, boxY, boxWidth, boxHight);
-    }
 }
